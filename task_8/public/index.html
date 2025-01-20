@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dynamic Joke Manager</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Dynamic Joke Manager</h1>
+  <button id="fetchJoke">Get Random Joke</button>
+  <p id="jokeDisplay"></p>
+  <button id="saveJoke">Save This Joke</button>
+  <button id="readJokes">Show Saved Jokes</button>
+  <ul id="jokesList"></ul>
+
+  <script>
+    const fetchJokeButton = document.getElementById('fetchJoke');
+    const saveJokeButton = document.getElementById('saveJoke');
+    const readJokesButton = document.getElementById('readJokes');
+    const jokeDisplay = document.getElementById('jokeDisplay');
+    const jokesList = document.getElementById('jokesList');
+    let currentJoke = '';
+
+    // Fetch a random joke
+    fetchJokeButton.addEventListener('click', async () => {
+      try {
+        const response = await fetch('/api/jokes');
+        const data = await response.json();
+        currentJoke = `${data.setup} ${data.punchline}`;
+        jokeDisplay.textContent = currentJoke;
+      } catch (error) {
+        jokeDisplay.textContent = 'Failed to fetch joke.';
+      }
+    });
+
+    // Save the current joke
+    saveJokeButton.addEventListener('click', async () => {
+      if (!currentJoke) {
+        alert('No joke to save!');
+        return;
+      }
+      try {
+        const response = await fetch('/api/save-joke', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ joke: currentJoke }),
+        });
+        const data = await response.json();
+        alert(data.message || 'Failed to save joke.');
+      } catch (error) {
+        alert('Failed to save joke.');
+      }
+    });
+
+    // Display saved jokes
+    readJokesButton.addEventListener('click', async () => {
+      try {
+        const response = await fetch('/api/read-jokes');
+        const data = await response.json();
+        jokesList.innerHTML = '';
+        data.jokes.forEach((joke) => {
+          const li = document.createElement('li');
+          li.textContent = joke;
+          jokesList.appendChild(li);
+        });
+      } catch (error) {
+        jokesList.innerHTML = '<li>Failed to load saved jokes.</li>';
+      }
+    });
+  </script>
+</body>
+</html>
